@@ -11,8 +11,9 @@ import {
   clearCartAction,
   removeFromCartAction,
 } from "@/lib/actions/cart";
+import { t } from "@/lib/i18n";
 
-export const metadata = { title: "Cart" };
+export const metadata = { title: "Сагс" };
 
 export default async function CartPage() {
   const cart = await readCart();
@@ -20,14 +21,14 @@ export default async function CartPage() {
   if (cart.length === 0) {
     return (
       <Container className="py-20">
-        <h1 className="font-display text-4xl text-ink-900">Your cart</h1>
+        <h1 className="font-display text-4xl text-ink-900">{t.cart.title}</h1>
         <div className="mt-10">
           <EmptyState
-            title="Your cart is empty"
-            description="Browse the shop and add a pack to get started."
+            title={t.cart.empty.title}
+            description={t.cart.empty.description}
             action={
               <Button asChild variant="secondary">
-                <Link href="/shop">Browse the shop</Link>
+                <Link href="/shop">{t.cart.empty.cta}</Link>
               </Button>
             }
           />
@@ -90,7 +91,7 @@ export default async function CartPage() {
   return (
     <Container className="py-16">
       <h1 className="font-display text-4xl text-ink-900 md:text-5xl">
-        Your cart
+        {t.cart.title}
       </h1>
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
@@ -156,7 +157,7 @@ export default async function CartPage() {
                       type="submit"
                       className="text-xs text-ink-500 underline underline-offset-4 hover:text-red-600"
                     >
-                      Remove
+                      {t.cart.remove}
                     </button>
                   </form>
                 </div>
@@ -167,21 +168,21 @@ export default async function CartPage() {
 
         <aside className="h-fit rounded-2xl border border-ink-200 bg-white p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Summary
+            {t.cart.summary}
           </div>
           <dl className="mt-4 space-y-3 text-sm">
             <div className="flex justify-between">
-              <dt className="text-ink-500">Subtotal</dt>
+              <dt className="text-ink-500">{t.cart.subtotal}</dt>
               <dd className="text-ink-900">{formatPrice(subtotal, "USD")}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-ink-500">Tax</dt>
-              <dd className="text-ink-500">Calculated at checkout</dd>
+              <dt className="text-ink-500">{t.cart.tax}</dt>
+              <dd className="text-ink-500">{t.cart.taxAtCheckout}</dd>
             </div>
           </dl>
           <div className="mt-4 border-t border-ink-200 pt-4">
             <div className="flex items-baseline justify-between">
-              <span className="font-medium text-ink-900">Total</span>
+              <span className="font-medium text-ink-900">{t.cart.total}</span>
               <span className="text-xl font-medium text-ink-900">
                 {formatPrice(subtotal, "USD")}
               </span>
@@ -189,7 +190,7 @@ export default async function CartPage() {
           </div>
 
           <Button asChild variant="secondary" className="mt-6 w-full">
-            <Link href="/checkout">Proceed to checkout</Link>
+            <Link href="/checkout">{t.cart.proceedToCheckout}</Link>
           </Button>
 
           <form action={clearCartAction}>
@@ -197,7 +198,7 @@ export default async function CartPage() {
               type="submit"
               className="mt-4 w-full text-center text-xs text-ink-500 underline underline-offset-4 hover:text-red-600"
             >
-              Empty cart
+              {t.cart.emptyCart}
             </button>
           </form>
         </aside>

@@ -6,6 +6,7 @@ import { registerAction, type AuthFormState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Input, Label } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
+import { t } from "@/lib/i18n";
 
 const initial: AuthFormState = {};
 
@@ -17,7 +18,7 @@ export function RegisterForm() {
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}
 
       <div className="space-y-1.5">
-        <Label htmlFor="name">Name</Label>
+        <Label htmlFor="name">{t.auth.register.name}</Label>
         <Input id="name" name="name" autoComplete="name" required />
         {state.fieldErrors?.name ? (
           <p className="text-xs text-red-600">{state.fieldErrors.name}</p>
@@ -25,7 +26,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t.auth.register.email}</Label>
         <Input
           id="email"
           name="email"
@@ -39,7 +40,7 @@ export function RegisterForm() {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t.auth.register.password}</Label>
         <Input
           id="password"
           name="password"
@@ -54,13 +55,13 @@ export function RegisterForm() {
       </div>
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Creating account…" : "Create account"}
+        {pending ? t.auth.register.submitting : t.auth.register.submit}
       </Button>
 
       <p className="text-center text-sm text-ink-500">
-        Already have an account?{" "}
+        {t.auth.register.haveAccount}{" "}
         <Link href="/login" className="text-ink-900 hover:text-accent">
-          Sign in
+          {t.auth.register.signIn}
         </Link>
       </p>
     </form>

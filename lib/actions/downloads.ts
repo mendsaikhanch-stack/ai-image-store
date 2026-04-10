@@ -3,6 +3,7 @@
 import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
+import { t } from "@/lib/i18n";
 
 export type DownloadActionState = {
   error?: string;
@@ -22,21 +23,21 @@ export async function createDownloadTokenAction(
   formData: FormData,
 ): Promise<DownloadActionState> {
   const user = await getCurrentUser();
-  if (!user) return { error: "Please sign in to download." };
+  if (!user) return { error: t.downloads.errorNotSignedIn };
 
   const downloadId = String(formData.get("downloadId") ?? "");
-  if (!downloadId) return { error: "Missing download id" };
+  if (!downloadId) return { error: t.downloads.errorNotFound };
 
   const download = await prisma.download.findUnique({
     where: { id: downloadId },
     include: { order: { select: { status: true, userId: true } } },
   });
-  if (!download) return { error: "Download not found" };
-  if (download.userId !== user.id) return { error: "Not your download" };
+  if (!download) return { error: t.downloads.errorNotFound };
+  if (download.userId !== user.id) return { error: t.downloads.errorNotOwner };
   if (download.order.status !== "PAID")
-    return { error: "Order is not paid" };
+    return { error: t.downloads.errorOrderNotPaid };
   if (download.usedCount >= download.maxCount)
-    return { error: "Download limit reached" };
+    return { error: t.downloads.errorLimitReached };
 
   const token = nanoid(40);
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);

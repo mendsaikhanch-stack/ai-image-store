@@ -5,10 +5,11 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 export const metadata = {
-  title: "Bundles",
-  description: "Curated bundles of AI image packs at a single price.",
+  title: "Багц",
+  description: "Нэг үнээр олон AI зургийн багцыг багтаасан цуглуулга.",
 };
 
 export default async function BundlesPage() {
@@ -32,14 +33,13 @@ export default async function BundlesPage() {
       <section className="border-b border-ink-200">
         <Container className="py-16">
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Bundles
+            {t.bundles.eyebrow}
           </p>
           <h1 className="mt-2 font-display text-4xl text-ink-900 md:text-5xl">
-            Curated bundles
+            {t.bundles.title}
           </h1>
           <p className="mt-4 max-w-xl text-ink-500">
-            Multi-pack collections at a single price. Great for studios and
-            agencies who need variety.
+            {t.bundles.description}
           </p>
         </Container>
       </section>
@@ -48,11 +48,11 @@ export default async function BundlesPage() {
         <Container className="py-14">
           {bundles.length === 0 ? (
             <EmptyState
-              title="No bundles yet"
-              description="We'll add bundles as new packs are released."
+              title={t.bundles.empty.title}
+              description={t.bundles.empty.description}
               action={
                 <Button asChild>
-                  <Link href="/shop">Browse the shop</Link>
+                  <Link href="/shop">{t.home.hero.browseCta}</Link>
                 </Button>
               }
             />
@@ -76,7 +76,7 @@ export default async function BundlesPage() {
                   </div>
                   <div className="flex flex-col justify-center p-8 md:p-10">
                     <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                      {b.items.length} packs
+                      {t.bundles.packsCount(b.items.length)}
                     </p>
                     <h2 className="mt-2 font-display text-3xl text-ink-900">
                       {b.title}
@@ -104,7 +104,7 @@ export default async function BundlesPage() {
                         {formatPrice(b.priceCents, "USD")}
                       </div>
                       <Button asChild variant="secondary">
-                        <Link href="/shop">View packs</Link>
+                        <Link href="/shop">{t.bundles.viewPacks}</Link>
                       </Button>
                     </div>
                   </div>

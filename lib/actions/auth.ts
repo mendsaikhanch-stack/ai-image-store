@@ -8,6 +8,7 @@ import {
 } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
 import { loginSchema, registerSchema } from "@/lib/validation";
+import { t } from "@/lib/i18n";
 
 export type AuthFormState = {
   error?: string;
@@ -29,10 +30,10 @@ export async function loginAction(
   const user = await prisma.user.findUnique({
     where: { email: parsed.data.email },
   });
-  if (!user) return { error: "Invalid email or password." };
+  if (!user) return { error: t.auth.errors.invalidCredentials };
 
   const ok = await verifyPassword(parsed.data.password, user.passwordHash);
-  if (!ok) return { error: "Invalid email or password." };
+  if (!ok) return { error: t.auth.errors.invalidCredentials };
 
   await createSessionCookie({
     sub: user.id,
@@ -61,7 +62,7 @@ export async function registerAction(
     where: { email: parsed.data.email },
   });
   if (existing) {
-    return { error: "An account with that email already exists." };
+    return { error: t.auth.errors.emailInUse };
   }
 
   const user = await prisma.user.create({

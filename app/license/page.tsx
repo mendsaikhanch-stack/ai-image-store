@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/ui/Container";
+import { t } from "@/lib/i18n";
 
 export const metadata = {
-  title: "License",
+  title: "Лицензийн нөхцөл",
   description:
-    "Plain-English license terms for every AI image pack on Atelier.",
+    "Ателье дээрх AI зургийн багц бүрийн лицензийн нөхцлийг энгийн монгол хэлээр тайлбарласан.",
 };
 
 export default async function LicensePage() {
@@ -17,14 +18,13 @@ export default async function LicensePage() {
       <section className="border-b border-ink-200">
         <Container className="py-16">
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            License
+            {t.license.eyebrow}
           </p>
           <h1 className="mt-2 font-display text-4xl text-ink-900 md:text-5xl">
-            Clear, plain-English licenses
+            {t.license.title}
           </h1>
           <p className="mt-4 max-w-2xl text-ink-500">
-            Every pack is sold under one of three licenses. You pick the
-            license at checkout based on how you&apos;ll use the files.
+            {t.license.description}
           </p>
         </Container>
       </section>
@@ -38,7 +38,7 @@ export default async function LicensePage() {
                 className="flex flex-col rounded-2xl border border-ink-200 bg-white p-6"
               >
                 <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                  License
+                  {t.license.licenseLabel}
                 </div>
                 <h2 className="mt-2 font-display text-2xl text-ink-900">
                   {l.name}
@@ -46,7 +46,7 @@ export default async function LicensePage() {
                 <p className="mt-3 text-sm text-ink-500">{l.summary}</p>
 
                 <div className="mt-6 text-xs uppercase tracking-[0.2em] text-ink-500">
-                  Allowed
+                  {t.license.allowed}
                 </div>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
                   {l.allowed.map((a) => (
@@ -58,7 +58,7 @@ export default async function LicensePage() {
                 </ul>
 
                 <div className="mt-6 text-xs uppercase tracking-[0.2em] text-ink-500">
-                  Not allowed
+                  {t.license.notAllowed}
                 </div>
                 <ul className="mt-3 space-y-1.5 text-sm text-ink-700">
                   {l.notAllowed.map((n) => (
@@ -70,7 +70,8 @@ export default async function LicensePage() {
                 </ul>
 
                 <div className="mt-6 text-xs text-ink-500">
-                  Multiplier: ×{l.priceMultiplier}
+                  {t.license.multiplier}
+                  {l.priceMultiplier}
                 </div>
               </article>
             ))}
@@ -78,20 +79,15 @@ export default async function LicensePage() {
 
           <div className="mt-14 rounded-2xl border border-ink-200 bg-white p-8">
             <h2 className="font-display text-2xl text-ink-900">
-              What no license allows
+              {t.license.neverAllowedTitle}
             </h2>
             <p className="mt-3 text-sm text-ink-600">
-              Regardless of which license you purchase, the following are{" "}
-              <strong>never</strong> permitted:
+              {t.license.neverAllowedIntro}
             </p>
             <ul className="mt-4 space-y-2 text-sm text-ink-700">
-              <li>• Reselling the file as a standalone asset</li>
-              <li>• Redistributing the file to third parties</li>
-              <li>• Sublicensing the file to others</li>
-              <li>
-                • Repackaging the file into another asset bundle or stock
-                collection
-              </li>
+              {t.license.neverAllowedList.map((item) => (
+                <li key={item}>• {item}</li>
+              ))}
             </ul>
           </div>
         </Container>

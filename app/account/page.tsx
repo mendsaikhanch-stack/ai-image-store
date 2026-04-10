@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
-export const metadata = { title: "Account" };
+export const metadata = { title: "Хэрэглэгч" };
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
@@ -34,49 +35,49 @@ export default async function AccountPage() {
       <div className="flex flex-wrap items-start justify-between gap-6">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Account
+            {t.account.eyebrow}
           </p>
           <h1 className="mt-2 font-display text-4xl text-ink-900 md:text-5xl">
-            {user.name ?? "Your account"}
+            {user.name ?? t.account.titleFallback}
           </h1>
           <p className="mt-2 text-ink-500">{user.email}</p>
         </div>
         <form action={logoutAction}>
           <Button variant="outline" type="submit">
-            Sign out
+            {t.account.signOut}
           </Button>
         </form>
       </div>
 
       <div className="mt-12 grid gap-6 md:grid-cols-3">
         <AccountNavCard
-          title="Profile"
-          description="Your name and email on record."
+          title={t.account.navProfileTitle}
+          description={t.account.navProfileDesc}
           href="/account"
           isActive
         />
         <AccountNavCard
-          title="Downloads"
-          description="All files you have access to."
+          title={t.account.navDownloadsTitle}
+          description={t.account.navDownloadsDesc}
           href="/account/downloads"
         />
         <AccountNavCard
-          title="Orders"
-          description={`${orders.length} orders on file.`}
+          title={t.account.navOrdersTitle}
+          description={t.account.navOrdersDesc(orders.length)}
           href="/account"
         />
       </div>
 
-      <h2 className="mt-16 font-display text-2xl text-ink-900">Recent orders</h2>
+      <h2 className="mt-16 font-display text-2xl text-ink-900">{t.account.recentOrders}</h2>
 
       {orders.length === 0 ? (
         <div className="mt-6">
           <EmptyState
-            title="No orders yet"
-            description="When you buy a pack it will appear here."
+            title={t.account.emptyOrders.title}
+            description={t.account.emptyOrders.description}
             action={
               <Button asChild variant="secondary">
-                <Link href="/shop">Browse the shop</Link>
+                <Link href="/shop">{t.account.emptyOrders.cta}</Link>
               </Button>
             }
           />
@@ -88,7 +89,7 @@ export default async function AccountPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                    Order #{o.id.slice(-6)}
+                    {t.account.orderNumber}{o.id.slice(-6)}
                   </div>
                   <div className="mt-1 text-sm text-ink-500">
                     {new Date(o.createdAt).toLocaleDateString()}
@@ -164,8 +165,8 @@ function OrderStatusBadge({
 }: {
   status: "PENDING" | "PAID" | "CANCELLED" | "REFUNDED";
 }) {
-  if (status === "PAID") return <Badge tone="success">Paid</Badge>;
-  if (status === "PENDING") return <Badge tone="muted">Pending</Badge>;
-  if (status === "CANCELLED") return <Badge tone="neutral">Cancelled</Badge>;
-  return <Badge tone="neutral">Refunded</Badge>;
+  if (status === "PAID") return <Badge tone="success">{t.account.orderStatus.paid}</Badge>;
+  if (status === "PENDING") return <Badge tone="muted">{t.account.orderStatus.pending}</Badge>;
+  if (status === "CANCELLED") return <Badge tone="neutral">{t.account.orderStatus.cancelled}</Badge>;
+  return <Badge tone="neutral">{t.account.orderStatus.refunded}</Badge>;
 }

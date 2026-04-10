@@ -60,22 +60,37 @@ async function main() {
   // ── Licenses ────────────────────────────────────────────
   const personal = await prisma.license.upsert({
     where: { tier: LicenseTier.PERSONAL },
-    update: {},
-    create: {
-      tier: LicenseTier.PERSONAL,
-      name: "Personal Use",
+    update: {
+      name: "Хувийн хэрэглээ",
       summary:
-        "For non-commercial personal projects, wallpapers, moodboards, and private prints.",
+        "Арилжааны бус хувийн төсөл, ханын цаас, төсөл зураг, хувийн хэвлэл.",
       allowed: [
-        "Personal prints & wallpapers",
-        "Moodboards and sketches",
-        "Non-commercial social media",
+        "Хувийн хэвлэл, ханын цаас",
+        "Төсөл зураг, үзэгчдэд",
+        "Арилжааны бус сошиал контент",
       ],
       notAllowed: [
-        "Resale as a standalone file",
-        "Use in commercial products",
-        "Redistribution or sublicensing",
-        "Repackaging into another asset bundle",
+        "Файлыг дангаар нь дахин худалдах",
+        "Арилжааны бүтээгдэхүүнд ашиглах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, багц болгон дахин багцлах",
+      ],
+    },
+    create: {
+      tier: LicenseTier.PERSONAL,
+      name: "Хувийн хэрэглээ",
+      summary:
+        "Арилжааны бус хувийн төсөл, ханын цаас, төсөл зураг, хувийн хэвлэл.",
+      allowed: [
+        "Хувийн хэвлэл, ханын цаас",
+        "Төсөл зураг, үзэгчдэд",
+        "Арилжааны бус сошиал контент",
+      ],
+      notAllowed: [
+        "Файлыг дангаар нь дахин худалдах",
+        "Арилжааны бүтээгдэхүүнд ашиглах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, багц болгон дахин багцлах",
       ],
       priceMultiplier: 1.0,
     },
@@ -83,21 +98,35 @@ async function main() {
 
   const standard = await prisma.license.upsert({
     where: { tier: LicenseTier.STANDARD_COMMERCIAL },
-    update: {},
-    create: {
-      tier: LicenseTier.STANDARD_COMMERCIAL,
-      name: "Standard Commercial",
+    update: {
+      name: "Арилжааны стандарт",
       summary:
-        "For commercial use in marketing, websites, and print runs up to 5,000 units.",
+        "Маркетинг, вэб сайт, 5000 ширхэг хүртэлх хэвлэлийн арилжааны хэрэглээнд.",
       allowed: [
-        "Commercial marketing & ads",
-        "Websites and apps",
-        "Merchandise up to 5,000 units",
+        "Арилжааны маркетинг, зар сурталчилгаа",
+        "Вэб сайт, апп",
+        "5000 ширхэг хүртэл бараа",
       ],
       notAllowed: [
-        "Resale as a standalone file",
-        "Redistribution or sublicensing",
-        "Repackaging into another asset bundle or stock collection",
+        "Файлыг дангаар нь дахин худалдах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, сан болгон дахин багцлах",
+      ],
+    },
+    create: {
+      tier: LicenseTier.STANDARD_COMMERCIAL,
+      name: "Арилжааны стандарт",
+      summary:
+        "Маркетинг, вэб сайт, 5000 ширхэг хүртэлх хэвлэлийн арилжааны хэрэглээнд.",
+      allowed: [
+        "Арилжааны маркетинг, зар сурталчилгаа",
+        "Вэб сайт, апп",
+        "5000 ширхэг хүртэл бараа",
+      ],
+      notAllowed: [
+        "Файлыг дангаар нь дахин худалдах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, сан болгон дахин багцлах",
       ],
       priceMultiplier: 2.5,
     },
@@ -105,21 +134,35 @@ async function main() {
 
   const extended = await prisma.license.upsert({
     where: { tier: LicenseTier.EXTENDED_COMMERCIAL },
-    update: {},
-    create: {
-      tier: LicenseTier.EXTENDED_COMMERCIAL,
-      name: "Extended Commercial",
+    update: {
+      name: "Арилжааны өргөтгөсөн",
       summary:
-        "Unlimited print runs, broadcast, and multi-brand commercial use.",
+        "Хязгааргүй хэвлэлт, телевиз, олон брэндийн арилжааны хэрэглээнд.",
       allowed: [
-        "Unlimited print runs",
-        "Broadcast & film",
-        "Multi-brand commercial use",
+        "Хязгааргүй хэвлэлт",
+        "Телевиз, кино",
+        "Олон брэндийн арилжааны хэрэглээ",
       ],
       notAllowed: [
-        "Resale as a standalone file",
-        "Redistribution or sublicensing",
-        "Repackaging into another asset bundle or stock collection",
+        "Файлыг дангаар нь дахин худалдах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, сан болгон дахин багцлах",
+      ],
+    },
+    create: {
+      tier: LicenseTier.EXTENDED_COMMERCIAL,
+      name: "Арилжааны өргөтгөсөн",
+      summary:
+        "Хязгааргүй хэвлэлт, телевиз, олон брэндийн арилжааны хэрэглээнд.",
+      allowed: [
+        "Хязгааргүй хэвлэлт",
+        "Телевиз, кино",
+        "Олон брэндийн арилжааны хэрэглээ",
+      ],
+      notAllowed: [
+        "Файлыг дангаар нь дахин худалдах",
+        "Тараах эсвэл дахин лицензлэх",
+        "Өөр цуглуулга, сан болгон дахин багцлах",
       ],
       priceMultiplier: 5.0,
     },
@@ -129,32 +172,32 @@ async function main() {
   const categoriesData = [
     {
       slug: "abstract",
-      name: "Abstract",
-      description: "Geometric, gradient, and textural abstract compositions.",
+      name: "Абстракт",
+      description: "Геометр, градиент, бүтэцтэй абстракт бүтээлүүд.",
       coverUrl: img("1557672172-298e090bd0f1"),
     },
     {
       slug: "nature",
-      name: "Nature",
-      description: "Landscapes, forests, oceans, and botanical studies.",
+      name: "Байгаль",
+      description: "Ландшафт, ой, далай, ургамлын судалгаа.",
       coverUrl: img("1501854140801-50d01698950b"),
     },
     {
       slug: "portraits",
-      name: "Portraits",
-      description: "Stylized AI-generated portrait studies.",
+      name: "Хөрөг",
+      description: "Загварлаг, AI-ээр үүсгэсэн хөрөг зургууд.",
       coverUrl: img("1544005313-94ddf0286df2"),
     },
     {
       slug: "architecture",
-      name: "Architecture",
-      description: "Speculative and historical architectural imagery.",
+      name: "Архитектур",
+      description: "Туршилтын болон түүхэн архитектурын бүтээлүүд.",
       coverUrl: img("1487958449943-2429e8be8625"),
     },
     {
       slug: "space",
-      name: "Space",
-      description: "Galaxies, nebulae, and cosmic horizons.",
+      name: "Огторгуй",
+      description: "Галактик, мананцар, сансарын тэнгэрийн хаяа.",
       coverUrl: img("1446776877081-d282a0f896e2"),
     },
   ];
@@ -163,7 +206,11 @@ async function main() {
     categoriesData.map((c) =>
       prisma.category.upsert({
         where: { slug: c.slug },
-        update: {},
+        update: {
+          name: c.name,
+          description: c.description,
+          coverUrl: c.coverUrl,
+        },
         create: c,
       }),
     ),
@@ -187,9 +234,9 @@ async function main() {
   const products: SeedProduct[] = [
     {
       slug: "nebula-dreams-vol-1",
-      title: "Nebula Dreams Vol. 1",
+      title: "Мананцарын зүүд 1-р боть",
       description:
-        "Twelve high-resolution cosmic compositions rendered for print and editorial use.",
+        "Хэвлэл, редакцийн хэрэглээнд бэлтгэсэн өндөр нягтралтай арван хоёр сансарын бүтээл.",
       priceCents: 4900,
       category: "space",
       images: [
@@ -202,9 +249,9 @@ async function main() {
     },
     {
       slug: "forest-silences",
-      title: "Forest Silences",
+      title: "Ойн чимээгүй",
       description:
-        "Misty forest and canopy studies with painterly depth and muted palettes.",
+        "Манан бүрхсэн ой, модны оройг зураачлаг гүнтэй, нам өнгөөр илэрхийлсэн цуглуулга.",
       priceCents: 3900,
       category: "nature",
       images: [
@@ -217,9 +264,9 @@ async function main() {
     },
     {
       slug: "brutalist-horizons",
-      title: "Brutalist Horizons",
+      title: "Брутал тэнгэрийн хаяа",
       description:
-        "Speculative architectural renderings in concrete, steel, and long light.",
+        "Бетон, ган, сунаса гэрэлтэй туршилтын архитектурын төсөөлөл.",
       priceCents: 5900,
       category: "architecture",
       images: [
@@ -231,9 +278,9 @@ async function main() {
     },
     {
       slug: "chromatic-abstracts",
-      title: "Chromatic Abstracts",
+      title: "Өнгөт абстракт",
       description:
-        "Bold gradient and geometric abstracts suitable for editorial layouts and covers.",
+        "Редакцийн загвар, нүүрэнд тохирох тод градиент, геометр абстрактууд.",
       priceCents: 3500,
       category: "abstract",
       images: [
@@ -245,9 +292,9 @@ async function main() {
     },
     {
       slug: "editorial-portraits-i",
-      title: "Editorial Portraits I",
+      title: "Редакцийн хөрөг I",
       description:
-        "Stylized AI portraits with cinematic lighting and neutral backdrops.",
+        "Киноны гэрэлтүүлэг, саруул арын дэвсгэртэй загварлаг AI хөрөг зургууд.",
       priceCents: 6900,
       category: "portraits",
       images: [
@@ -259,9 +306,9 @@ async function main() {
     },
     {
       slug: "oceanic-minimal",
-      title: "Oceanic Minimal",
+      title: "Далайн минимал",
       description:
-        "Minimalist seascapes with clean horizons and subtle gradients.",
+        "Цэвэр тэнгэрийн хаяа, зөөлөн градиенттэй минимал далайн зураг.",
       priceCents: 3200,
       category: "nature",
       images: [
@@ -272,9 +319,9 @@ async function main() {
     },
     {
       slug: "deep-field",
-      title: "Deep Field",
+      title: "Гүн огторгуй",
       description:
-        "Distant galaxies and deep-field cosmic imagery in print-ready resolution.",
+        "Алс галактик, гүн сансарын зургуудыг хэвлэлтэд бэлэн нягтралтайгаар.",
       priceCents: 5900,
       category: "space",
       images: [
@@ -286,9 +333,9 @@ async function main() {
     },
     {
       slug: "concrete-light",
-      title: "Concrete & Light",
+      title: "Бетон ба гэрэл",
       description:
-        "Architectural still-life of concrete surfaces catching directional light.",
+        "Бетон гадаргууд тусгасан чиглэсэн гэрлийн архитектурын зураг.",
       priceCents: 4500,
       category: "architecture",
       images: [
@@ -299,9 +346,9 @@ async function main() {
     },
     {
       slug: "soft-geometries",
-      title: "Soft Geometries",
+      title: "Зөөлөн геометр",
       description:
-        "Pastel abstracts with soft gradients — ideal for brand and product backdrops.",
+        "Зөөлөн градиенттэй пастель абстрактууд — брэнд, бүтээгдэхүүний арын дэвсгэрт тохиромжтой.",
       priceCents: 2900,
       category: "abstract",
       images: [
@@ -313,9 +360,9 @@ async function main() {
     },
     {
       slug: "arctic-study",
-      title: "Arctic Study",
+      title: "Арктикийн судалгаа",
       description:
-        "Cold-weather nature studies: ice, fog, and low-contrast winter palettes.",
+        "Мөс, манан, бага ялгаралтай өвлийн өнгөний судалгаа.",
       priceCents: 4200,
       category: "nature",
       images: [
@@ -330,7 +377,15 @@ async function main() {
   for (const p of products) {
     const product = await prisma.product.upsert({
       where: { slug: p.slug },
-      update: {},
+      update: {
+        title: p.title,
+        description: p.description,
+        priceCents: p.priceCents,
+        categoryId: byCat[p.category]!,
+        isFeatured: p.isFeatured ?? false,
+        isNew: p.isNew ?? false,
+        isBestseller: p.isBestseller ?? false,
+      },
       create: {
         slug: p.slug,
         title: p.title,
@@ -357,24 +412,24 @@ async function main() {
   const bundlesData = [
     {
       slug: "cosmic-collection",
-      title: "The Cosmic Collection",
-      subtitle: "Every space pack. One price.",
+      title: "Сансарын цуглуулга",
+      subtitle: "Бүх огторгуйн багц. Нэг үнэ.",
       coverUrl: img("1446776877081-d282a0f896e2"),
       priceCents: 8900,
       productSlugs: ["nebula-dreams-vol-1", "deep-field"],
     },
     {
       slug: "nature-essentials",
-      title: "Nature Essentials",
-      subtitle: "Forests, oceans, and arctic studies.",
+      title: "Байгалийн гол багц",
+      subtitle: "Ой, далай, хойд туйлын судалгаа.",
       coverUrl: img("1501854140801-50d01698950b"),
       priceCents: 9900,
       productSlugs: ["forest-silences", "oceanic-minimal", "arctic-study"],
     },
     {
       slug: "studio-starter",
-      title: "Studio Starter",
-      subtitle: "A curated mix for studios and brands.",
+      title: "Студио эхлэл",
+      subtitle: "Студи, брэндэд зориулсан цуглуулга.",
       coverUrl: img("1487958449943-2429e8be8625"),
       priceCents: 12900,
       productSlugs: [
@@ -388,7 +443,12 @@ async function main() {
   for (const b of bundlesData) {
     const bundle = await prisma.bundle.upsert({
       where: { slug: b.slug },
-      update: {},
+      update: {
+        title: b.title,
+        subtitle: b.subtitle,
+        coverUrl: b.coverUrl,
+        priceCents: b.priceCents,
+      },
       create: {
         slug: b.slug,
         title: b.title,

@@ -6,6 +6,7 @@ import { loginAction, type AuthFormState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Input, Label } from "@/components/ui/Input";
 import { Alert } from "@/components/ui/Alert";
+import { t } from "@/lib/i18n";
 
 const initial: AuthFormState = {};
 
@@ -19,7 +20,7 @@ export function LoginForm({ next }: { next?: string }) {
       {state.error ? <Alert tone="error">{state.error}</Alert> : null}
 
       <div className="space-y-1.5">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{t.auth.login.email}</Label>
         <Input
           id="email"
           name="email"
@@ -33,7 +34,7 @@ export function LoginForm({ next }: { next?: string }) {
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{t.auth.login.password}</Label>
         <Input
           id="password"
           name="password"
@@ -47,13 +48,13 @@ export function LoginForm({ next }: { next?: string }) {
       </div>
 
       <Button type="submit" disabled={pending} className="w-full">
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? t.auth.login.submitting : t.auth.login.submit}
       </Button>
 
       <p className="text-center text-sm text-ink-500">
-        No account?{" "}
+        {t.auth.login.noAccount}{" "}
         <Link href="/register" className="text-ink-900 hover:text-accent">
-          Create one
+          {t.auth.login.createOne}
         </Link>
       </p>
     </form>

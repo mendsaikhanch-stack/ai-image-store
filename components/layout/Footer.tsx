@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { t } from "@/lib/i18n";
 
 export function Footer() {
   return (
@@ -7,38 +8,38 @@ export function Footer() {
       <Container className="py-12">
         <div className="grid gap-10 md:grid-cols-4">
           <div>
-            <div className="font-display text-xl text-ink-900">Atelier</div>
+            <div className="font-display text-xl text-ink-900">{t.brand}</div>
             <p className="mt-3 max-w-xs text-sm text-ink-500">
-              Curated AI image packs licensed for personal and commercial use.
+              {t.footer.tagline}
             </p>
           </div>
           <FooterCol
-            title="Shop"
+            title={t.footer.shop}
             links={[
-              { href: "/shop", label: "All products" },
-              { href: "/bundles", label: "Bundles" },
-              { href: "/license", label: "License" },
+              { href: "/shop", label: t.footer.allProducts },
+              { href: "/bundles", label: t.footer.bundles },
+              { href: "/license", label: t.footer.license },
             ]}
           />
           <FooterCol
-            title="Account"
+            title={t.footer.account}
             links={[
-              { href: "/login", label: "Sign in" },
-              { href: "/register", label: "Create account" },
-              { href: "/account/downloads", label: "My downloads" },
+              { href: "/login", label: t.footer.signIn },
+              { href: "/register", label: t.footer.createAccount },
+              { href: "/account/downloads", label: t.footer.myDownloads },
             ]}
           />
           <FooterCol
-            title="Legal"
+            title={t.footer.legal}
             links={[
-              { href: "/license", label: "License terms" },
-              { href: "#", label: "Privacy" },
-              { href: "#", label: "Terms" },
+              { href: "/license", label: t.footer.licenseTerms },
+              { href: "#", label: t.footer.privacy },
+              { href: "#", label: t.footer.terms },
             ]}
           />
         </div>
         <div className="mt-12 border-t border-ink-200 pt-6 text-xs text-ink-500">
-          © {new Date().getFullYear()} Atelier. All rights reserved.
+          © {new Date().getFullYear()} {t.brand}. {t.footer.rightsReserved}
         </div>
       </Container>
     </footer>

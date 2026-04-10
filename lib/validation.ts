@@ -1,23 +1,24 @@
 import { z } from "zod";
+import { t } from "@/lib/i18n";
 
 export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .email("Please enter a valid email address.");
+  .email(t.auth.errors.invalidEmail);
 
 export const passwordSchema = z
   .string()
-  .min(6, "Password must be at least 6 characters.")
+  .min(6, t.auth.errors.passwordMin)
   .max(128);
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required."),
+  password: z.string().min(1, t.auth.errors.passwordRequired),
 });
 
 export const registerSchema = z.object({
-  name: z.string().trim().min(1, "Please enter your name.").max(80),
+  name: z.string().trim().min(1, t.auth.errors.nameRequired).max(80),
   email: emailSchema,
   password: passwordSchema,
 });

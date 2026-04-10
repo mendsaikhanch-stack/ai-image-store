@@ -4,6 +4,7 @@ import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductCard } from "@/components/product/ProductCard";
 import { ShopFilters } from "@/components/shop/ShopFilters";
+import { t } from "@/lib/i18n";
 
 type SearchParams = Promise<{
   q?: string;
@@ -12,8 +13,8 @@ type SearchParams = Promise<{
 }>;
 
 export const metadata = {
-  title: "Shop",
-  description: "Browse every licensed AI image pack on Atelier.",
+  title: "Дэлгүүр",
+  description: "Ателье дээрх бүх лицензтэй AI зургийн багцуудыг харах.",
 };
 
 export default async function ShopPage({
@@ -64,14 +65,13 @@ export default async function ShopPage({
       <section className="border-b border-ink-200">
         <Container className="py-16">
           <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Shop
+            {t.shop.eyebrow}
           </p>
           <h1 className="mt-2 font-display text-4xl text-ink-900 md:text-5xl">
-            Every licensed pack
+            {t.shop.title}
           </h1>
           <p className="mt-3 max-w-xl text-ink-500">
-            Browse all {products.length} packs. Filter by category, search
-            by title, and sort by price or newness.
+            {t.shop.description(products.length)}
           </p>
           <div className="mt-10">
             <ShopFilters
@@ -86,8 +86,8 @@ export default async function ShopPage({
         <Container className="py-14">
           {products.length === 0 ? (
             <EmptyState
-              title="No packs match those filters"
-              description="Try clearing your search or picking another category."
+              title={t.shop.empty.title}
+              description={t.shop.empty.description}
             />
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

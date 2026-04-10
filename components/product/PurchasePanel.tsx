@@ -6,6 +6,7 @@ import { LicenseTier } from "@prisma/client";
 import { Button } from "@/components/ui/Button";
 import { addToCartAction } from "@/lib/actions/cart";
 import { cn, formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 type LicenseOption = {
   tier: LicenseTier;
@@ -86,7 +87,7 @@ export function PurchasePanel({
       <div className="lg:sticky lg:top-24 lg:self-start">
         <div className="rounded-2xl border border-ink-200 bg-white p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Select license
+            {t.product.selectLicense}
           </div>
           <div className="mt-4 space-y-2">
             {licenseOptions.map((opt) => {
@@ -129,7 +130,7 @@ export function PurchasePanel({
             <input type="hidden" name="productId" value={productId} />
             <input type="hidden" name="licenseTier" value={tier} />
             <Button type="submit" variant="secondary" className="w-full">
-              Add to cart —{" "}
+              {t.product.addToCart} —{" "}
               {selected
                 ? formatPrice(selected.priceCents, currency)
                 : ""}
@@ -137,7 +138,7 @@ export function PurchasePanel({
           </form>
 
           <p className="mt-3 text-center text-xs text-ink-500">
-            Instant digital download after checkout
+            {t.product.instantDownload}
           </p>
         </div>
       </div>

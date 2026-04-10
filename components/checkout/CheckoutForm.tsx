@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import { placeOrderAction, type CheckoutState } from "@/lib/actions/checkout";
 import { Button } from "@/components/ui/Button";
 import { Alert } from "@/components/ui/Alert";
+import { t } from "@/lib/i18n";
 
 const initial: CheckoutState = {};
 
@@ -19,11 +20,12 @@ export function CheckoutForm({ totalLabel }: { totalLabel: string }) {
         className="w-full"
         disabled={pending}
       >
-        {pending ? "Processing…" : `Confirm order · ${totalLabel}`}
+        {pending
+          ? t.checkout.processing
+          : `${t.checkout.confirmOrder} · ${totalLabel}`}
       </Button>
       <p className="text-center text-xs text-ink-500">
-        This is a demo checkout using a mock payment provider. No card is
-        charged.
+        {t.checkout.confirmOrderHint}
       </p>
     </form>
   );

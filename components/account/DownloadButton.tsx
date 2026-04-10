@@ -6,6 +6,7 @@ import {
   createDownloadTokenAction,
   type DownloadActionState,
 } from "@/lib/actions/downloads";
+import { t } from "@/lib/i18n";
 
 const initial: DownloadActionState = {};
 
@@ -21,9 +22,6 @@ export function DownloadButton({
     initial,
   );
 
-  // When the server action returns a URL, navigate to it so the
-  // browser starts the download. Using window.location preserves
-  // the user's session cookie.
   useEffect(() => {
     if (state.url) {
       window.location.href = state.url;
@@ -39,7 +37,7 @@ export function DownloadButton({
         size="sm"
         disabled={pending || disabled}
       >
-        {pending ? "Preparing…" : "Download"}
+        {pending ? t.downloads.preparing : t.downloads.download}
       </Button>
       {state.error ? (
         <span className="text-xs text-red-600">{state.error}</span>

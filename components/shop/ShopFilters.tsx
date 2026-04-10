@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { t } from "@/lib/i18n";
 
 type Category = { slug: string; name: string };
 
@@ -44,7 +45,7 @@ export function ShopFilters({ categories, current }: Props) {
       <Input
         name="q"
         defaultValue={current.q ?? ""}
-        placeholder="Search packs…"
+        placeholder={t.shop.filters.searchPlaceholder}
       />
       <Select
         name="category"
@@ -57,7 +58,7 @@ export function ShopFilters({ categories, current }: Props) {
           })
         }
       >
-        <option value="">All categories</option>
+        <option value="">{t.shop.filters.allCategories}</option>
         {categories.map((c) => (
           <option key={c.slug} value={c.slug}>
             {c.name}
@@ -75,9 +76,9 @@ export function ShopFilters({ categories, current }: Props) {
           })
         }
       >
-        <option value="new">Newest</option>
-        <option value="price-asc">Price: Low to high</option>
-        <option value="price-desc">Price: High to low</option>
+        <option value="new">{t.shop.filters.sortNewest}</option>
+        <option value="price-asc">{t.shop.filters.sortPriceAsc}</option>
+        <option value="price-desc">{t.shop.filters.sortPriceDesc}</option>
       </Select>
     </form>
   );

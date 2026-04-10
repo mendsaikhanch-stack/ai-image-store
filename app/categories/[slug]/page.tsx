@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Container } from "@/components/ui/Container";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ProductCard } from "@/components/product/ProductCard";
+import { t } from "@/lib/i18n";
 
 type Params = Promise<{ slug: string }>;
 
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     where: { slug },
     select: { name: true, description: true },
   });
-  if (!category) return { title: "Category not found" };
+  if (!category) return { title: "Ангилал олдсонгүй" };
   return {
     title: category.name,
     description: category.description ?? undefined,
@@ -45,7 +46,7 @@ export default async function CategoryPage({ params }: { params: Params }) {
         <Container className="py-16">
           <nav className="text-xs text-ink-500">
             <Link href="/shop" className="hover:text-ink-900">
-              Shop
+              {t.category.breadcrumb}
             </Link>
             <span> / </span>
             <span className="text-ink-700">{category.name}</span>
@@ -63,8 +64,8 @@ export default async function CategoryPage({ params }: { params: Params }) {
         <Container className="py-14">
           {category.products.length === 0 ? (
             <EmptyState
-              title="Nothing here yet"
-              description="We're still curating this category. Check back soon."
+              title={t.category.empty.title}
+              description={t.category.empty.description}
             />
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

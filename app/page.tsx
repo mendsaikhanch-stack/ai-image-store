@@ -5,6 +5,7 @@ import { Container } from "@/components/ui/Container";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/product/ProductCard";
 import { formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 export default async function HomePage() {
   const [featuredProducts, categories, bundles] = await Promise.all([
@@ -25,24 +26,22 @@ export default async function HomePage() {
         <Container className="grid gap-12 py-20 md:grid-cols-[1.1fr_1fr] md:py-28 lg:py-32">
           <div className="flex flex-col justify-center">
             <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-              Curated · Licensed · Print-ready
+              {t.home.hero.eyebrow}
             </p>
             <h1 className="mt-4 font-display text-4xl leading-tight text-ink-900 md:text-5xl lg:text-6xl">
-              A premium marketplace
+              {t.home.hero.titleLine1}
               <br />
-              for AI image packs.
+              {t.home.hero.titleLine2}
             </h1>
             <p className="mt-6 max-w-xl text-lg text-ink-600">
-              Buy high-resolution AI image collections under clear
-              commercial-use licenses. Hand-curated packs for studios, brands,
-              and publishers.
+              {t.home.hero.description}
             </p>
             <div className="mt-10 flex flex-wrap items-center gap-3">
               <Button asChild size="lg" variant="secondary">
-                <Link href="/shop">Browse the shop</Link>
+                <Link href="/shop">{t.home.hero.browseCta}</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link href="/license">Read the license</Link>
+                <Link href="/license">{t.home.hero.licenseCta}</Link>
               </Button>
             </div>
           </div>
@@ -69,17 +68,17 @@ export default async function HomePage() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                  Browse by theme
+                  {t.home.categories.eyebrow}
                 </p>
                 <h2 className="mt-2 font-display text-3xl text-ink-900">
-                  Featured categories
+                  {t.home.categories.title}
                 </h2>
               </div>
               <Link
                 href="/shop"
                 className="hidden text-sm text-ink-700 hover:text-ink-900 sm:block"
               >
-                View all →
+                {t.home.categories.viewAll}
               </Link>
             </div>
             <div className="mt-10 grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
@@ -118,17 +117,17 @@ export default async function HomePage() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                  Hand-picked
+                  {t.home.featured.eyebrow}
                 </p>
                 <h2 className="mt-2 font-display text-3xl text-ink-900">
-                  Featured packs
+                  {t.home.featured.title}
                 </h2>
               </div>
               <Link
                 href="/shop"
                 className="hidden text-sm text-ink-700 hover:text-ink-900 sm:block"
               >
-                View all →
+                {t.home.featured.viewAll}
               </Link>
             </div>
             <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -158,17 +157,17 @@ export default async function HomePage() {
             <div className="flex items-end justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                  Save more
+                  {t.home.bundlesTeaser.eyebrow}
                 </p>
                 <h2 className="mt-2 font-display text-3xl text-ink-900">
-                  Curated bundles
+                  {t.home.bundlesTeaser.title}
                 </h2>
               </div>
               <Link
                 href="/bundles"
                 className="hidden text-sm text-ink-700 hover:text-ink-900 sm:block"
               >
-                All bundles →
+                {t.home.bundlesTeaser.viewAll}
               </Link>
             </div>
             <div className="mt-10 grid gap-6 md:grid-cols-3">
@@ -197,7 +196,7 @@ export default async function HomePage() {
                       {b.subtitle}
                     </div>
                     <div className="mt-4 text-sm font-medium text-ink-900">
-                      From {formatPrice(b.priceCents, "USD")}
+                      {t.home.bundlesTeaser.from} {formatPrice(b.priceCents, "USD")}
                     </div>
                   </div>
                 </Link>
@@ -212,14 +211,13 @@ export default async function HomePage() {
         <Container className="py-20">
           <div className="rounded-2xl border border-ink-200 bg-ink-900 px-10 py-16 text-center text-ink-50">
             <p className="text-xs uppercase tracking-[0.2em] text-ink-300">
-              Coming soon
+              {t.home.membership.eyebrow}
             </p>
             <h2 className="mt-3 font-display text-3xl md:text-4xl">
-              Atelier Membership
+              {t.home.membership.title}
             </h2>
             <p className="mx-auto mt-3 max-w-lg text-ink-300">
-              Unlimited commercial downloads for studios, at a fixed monthly
-              rate. Join the waitlist when it opens.
+              {t.home.membership.description}
             </p>
           </div>
         </Container>
@@ -230,16 +228,16 @@ export default async function HomePage() {
         <Container className="py-20">
           <div className="grid gap-10 md:grid-cols-3">
             <TrustItem
-              title="Clear licenses"
-              body="Personal, Standard Commercial, and Extended Commercial — written in plain English."
+              title={t.home.trust.item1Title}
+              body={t.home.trust.item1Body}
             />
             <TrustItem
-              title="Print-ready files"
-              body="High-resolution source files at 4K and up, delivered as organized downloads."
+              title={t.home.trust.item2Title}
+              body={t.home.trust.item2Body}
             />
             <TrustItem
-              title="Curated, not scraped"
-              body="Every pack is hand-picked for aesthetic and commercial usability."
+              title={t.home.trust.item3Title}
+              body={t.home.trust.item3Body}
             />
           </div>
         </Container>

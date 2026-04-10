@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/session";
 import { clearCartCookie, readCart } from "@/lib/cart";
 import { resolveLicensePrice } from "@/lib/licensePrice";
 import { getPaymentProvider } from "@/lib/payments";
+import { t } from "@/lib/i18n";
 
 export type CheckoutState = {
   error?: string;
@@ -20,7 +21,7 @@ export async function placeOrderAction(
   if (!user) redirect("/login?next=/checkout");
 
   const cart = await readCart();
-  if (cart.length === 0) return { error: "Your cart is empty." };
+  if (cart.length === 0) return { error: t.checkout.errorCartEmpty };
 
   // Load all products and licenses referenced by the cart.
   const productIds = Array.from(new Set(cart.map((i) => i.productId)));
@@ -49,7 +50,7 @@ export async function placeOrderAction(
     const product = productById.get(item.productId);
     const license = licenseByTier.get(item.licenseTier);
     if (!product || !license) {
-      return { error: "A product in your cart is no longer available." };
+      return { error: t.checkout.errorProductUnavailable };
     }
     const priceCents = resolveLicensePrice({
       productBaseCents: product.priceCents,
@@ -97,7 +98,7 @@ export async function placeOrderAction(
   });
 
   if (charge.status !== "PAID") {
-    return { error: "Payment was not completed. Please try again." };
+    return { error: t.checkout.errorPaymentFailed };
   }
 
   // Mark paid, create Download entitlements, clear cart. All in one tx.

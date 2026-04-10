@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
 type Props = {
   slug: string;
@@ -42,10 +43,10 @@ export function ProductCard({
           />
         ) : null}
         <div className="absolute left-3 top-3 flex flex-wrap gap-1.5">
-          {isBestseller ? <Badge tone="accent">Bestseller</Badge> : null}
-          {isNew ? <Badge tone="success">New</Badge> : null}
+          {isBestseller ? <Badge tone="accent">{t.product.badges.bestseller}</Badge> : null}
+          {isNew ? <Badge tone="success">{t.product.badges.new}</Badge> : null}
           {isFeatured && !isBestseller && !isNew ? (
-            <Badge tone="muted">Featured</Badge>
+            <Badge tone="muted">{t.product.badges.featured}</Badge>
           ) : null}
         </div>
       </div>

@@ -9,8 +9,9 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Alert } from "@/components/ui/Alert";
 import { DownloadButton } from "@/components/account/DownloadButton";
+import { t } from "@/lib/i18n";
 
-export const metadata = { title: "Downloads" };
+export const metadata = { title: "Татан авалт" };
 
 type SearchParams = Promise<{ success?: string }>;
 
@@ -39,19 +40,19 @@ export default async function DownloadsPage({
   return (
     <Container className="py-16">
       <p className="text-xs uppercase tracking-[0.2em] text-ink-500">
-        Account
+        {t.downloads.eyebrow}
       </p>
       <h1 className="mt-2 font-display text-4xl text-ink-900 md:text-5xl">
-        Your downloads
+        {t.downloads.title}
       </h1>
       <p className="mt-3 text-ink-500">
-        All packs you have active download access to.
+        {t.downloads.description}
       </p>
 
       {success ? (
         <div className="mt-8">
           <Alert tone="success">
-            Thanks — your order is confirmed. Your new downloads are below.
+            {t.downloads.success}
           </Alert>
         </div>
       ) : null}
@@ -59,11 +60,11 @@ export default async function DownloadsPage({
       <div className="mt-10">
         {downloads.length === 0 ? (
           <EmptyState
-            title="No downloads yet"
-            description="Buy a pack and your downloads will appear here."
+            title={t.downloads.empty.title}
+            description={t.downloads.empty.description}
             action={
               <Button asChild variant="secondary">
-                <Link href="/shop">Browse the shop</Link>
+                <Link href="/shop">{t.downloads.empty.cta}</Link>
               </Button>
             }
           />
@@ -106,8 +107,8 @@ export default async function DownloadsPage({
                     </div>
                     <div className="mt-1 text-xs text-ink-500">
                       {remaining > 0
-                        ? `${remaining} of ${d.maxCount} downloads remaining`
-                        : "Download limit reached"}
+                        ? t.downloads.remaining(remaining, d.maxCount)
+                        : t.downloads.limitReached}
                     </div>
                   </div>
                   <DownloadButton
@@ -122,22 +123,12 @@ export default async function DownloadsPage({
       </div>
 
       <p className="mt-6 text-xs text-ink-500">
-        Each download is served through a short-lived signed token. Source
-        files are never served directly from public storage.
+        {t.downloads.securityNote}
       </p>
     </Container>
   );
 }
 
 function licenseLabel(tier: string): string {
-  switch (tier) {
-    case "PERSONAL":
-      return "Personal";
-    case "STANDARD_COMMERCIAL":
-      return "Standard Commercial";
-    case "EXTENDED_COMMERCIAL":
-      return "Extended Commercial";
-    default:
-      return tier;
-  }
+  return t.downloads.licenseLabels[tier] ?? tier;
 }

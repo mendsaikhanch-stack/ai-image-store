@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { PurchasePanel } from "@/components/product/PurchasePanel";
 import { ProductCard } from "@/components/product/ProductCard";
 import { resolveLicensePrice } from "@/lib/licensePrice";
+import { t } from "@/lib/i18n";
 
 type Params = Promise<{ slug: string }>;
 
@@ -15,7 +16,7 @@ export async function generateMetadata({ params }: { params: Params }) {
     where: { slug },
     select: { title: true, description: true },
   });
-  if (!product) return { title: "Not found" };
+  if (!product) return { title: "Олдсонгүй" };
   return { title: product.title, description: product.description };
 }
 
@@ -72,7 +73,7 @@ export default async function ProductPage({ params }: { params: Params }) {
         <Container className="py-10">
           <nav className="flex flex-wrap items-center gap-1.5 text-xs text-ink-500">
             <Link href="/shop" className="hover:text-ink-900">
-              Shop
+              {t.product.breadcrumb.shop}
             </Link>
             <span>/</span>
             <Link
@@ -90,10 +91,10 @@ export default async function ProductPage({ params }: { params: Params }) {
       <section>
         <Container className="py-12">
           <div className="mb-10 flex flex-wrap items-center gap-2">
-            {product.isBestseller ? <Badge tone="accent">Bestseller</Badge> : null}
-            {product.isNew ? <Badge tone="success">New</Badge> : null}
+            {product.isBestseller ? <Badge tone="accent">{t.product.badges.bestseller}</Badge> : null}
+            {product.isNew ? <Badge tone="success">{t.product.badges.new}</Badge> : null}
             {product.isFeatured && !product.isBestseller && !product.isNew ? (
-              <Badge tone="muted">Featured</Badge>
+              <Badge tone="muted">{t.product.badges.featured}</Badge>
             ) : null}
           </div>
 
@@ -117,26 +118,25 @@ export default async function ProductPage({ params }: { params: Params }) {
           <div className="mt-16 grid gap-10 md:grid-cols-2">
             <div className="rounded-2xl border border-ink-200 bg-white p-6">
               <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                File details
+                {t.product.fileDetails}
               </div>
               <dl className="mt-4 space-y-3 text-sm">
-                <Row label="Format" value={product.fileFormat} />
-                <Row label="Resolution" value={product.fileResolution} />
-                <Row label="File count" value={`${product.fileCount} files`} />
-                <Row label="Pack size" value={`${product.fileSizeMb} MB`} />
-                <Row label="Delivery" value="Instant download after checkout" />
+                <Row label={t.product.format} value={product.fileFormat} />
+                <Row label={t.product.resolution} value={product.fileResolution} />
+                <Row label={t.product.fileCountLabel} value={t.product.fileCount(product.fileCount)} />
+                <Row label={t.product.packSizeLabel} value={t.product.packSize(product.fileSizeMb)} />
+                <Row label={t.product.delivery} value={t.product.deliveryValue} />
               </dl>
             </div>
 
             <div className="rounded-2xl border border-ink-200 bg-white p-6">
               <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                What&apos;s included
+                {t.product.whatsIncluded}
               </div>
               <ul className="mt-4 space-y-2 text-sm text-ink-700">
-                <li>• {product.fileCount} high-resolution source files</li>
-                <li>• Multiple aspect ratios for print and web</li>
-                <li>• License certificate with your order</li>
-                <li>• Free updates if the pack is revised</li>
+                {t.product.includedList(product.fileCount).map((line) => (
+                  <li key={line}>• {line}</li>
+                ))}
               </ul>
             </div>
           </div>
@@ -144,7 +144,7 @@ export default async function ProductPage({ params }: { params: Params }) {
           <div className="mt-10 grid gap-10 md:grid-cols-2">
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                Allowed uses
+                {t.product.allowedUses}
               </div>
               <ul className="mt-4 space-y-2 text-sm text-ink-700">
                 {allAllowed.map((a) => (
@@ -157,7 +157,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             </div>
             <div>
               <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-                Not allowed
+                {t.product.notAllowed}
               </div>
               <ul className="mt-4 space-y-2 text-sm text-ink-700">
                 {allNotAllowed.map((a) => (
@@ -171,7 +171,7 @@ export default async function ProductPage({ params }: { params: Params }) {
                 href="/license"
                 className="mt-4 inline-block text-sm text-ink-900 underline underline-offset-4 hover:text-accent"
               >
-                Read the full license →
+                {t.product.readFullLicense}
               </Link>
             </div>
           </div>
@@ -181,7 +181,7 @@ export default async function ProductPage({ params }: { params: Params }) {
       {related.length > 0 ? (
         <section className="border-t border-ink-200 bg-white">
           <Container className="py-16">
-            <h2 className="font-display text-2xl text-ink-900">You may also like</h2>
+            <h2 className="font-display text-2xl text-ink-900">{t.product.related}</h2>
             <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {related.map((p) => (
                 <ProductCard

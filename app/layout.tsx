@@ -7,11 +7,11 @@ import { assertRequiredEnv } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: {
-    default: "Atelier — Licensed AI Image Store",
-    template: "%s · Atelier",
+    default: "Ателье — Лицензтэй AI зургийн дэлгүүр",
+    template: "%s · Ателье",
   },
   description:
-    "A curated marketplace for print-ready AI image packs under clear commercial-use licenses.",
+    "Тодорхой арилжааны лицензтэй, хэвлэлтэд бэлэн AI зургийн багцуудын нарийн шалгагдсан дэлгүүр.",
 };
 
 // Every route depends on per-request data (session cookie, cart cookie,
@@ -28,7 +28,7 @@ export default function RootLayout({
   assertRequiredEnv();
 
   return (
-    <html lang="en">
+    <html lang="mn">
       <body className="min-h-screen flex flex-col">
         <DemoBanner />
         <Header />

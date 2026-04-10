@@ -9,8 +9,9 @@ import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { formatPrice } from "@/lib/utils";
+import { t } from "@/lib/i18n";
 
-export const metadata = { title: "Checkout" };
+export const metadata = { title: "Төлбөр тооцоо" };
 
 export default async function CheckoutPage() {
   const user = await getCurrentUser();
@@ -20,14 +21,14 @@ export default async function CheckoutPage() {
   if (cart.length === 0) {
     return (
       <Container className="py-20">
-        <h1 className="font-display text-4xl text-ink-900">Checkout</h1>
+        <h1 className="font-display text-4xl text-ink-900">{t.checkout.title}</h1>
         <div className="mt-10">
           <EmptyState
-            title="Nothing to check out"
-            description="Your cart is empty. Browse the shop and add a pack first."
+            title={t.checkout.empty.title}
+            description={t.checkout.empty.description}
             action={
               <Button asChild variant="secondary">
-                <Link href="/shop">Browse the shop</Link>
+                <Link href="/shop">{t.checkout.empty.cta}</Link>
               </Button>
             }
           />
@@ -79,16 +80,16 @@ export default async function CheckoutPage() {
   return (
     <Container className="py-16">
       <h1 className="font-display text-4xl text-ink-900 md:text-5xl">
-        Checkout
+        {t.checkout.title}
       </h1>
       <p className="mt-3 text-ink-500">
-        Signed in as <span className="text-ink-900">{user.email}</span>
+        {t.checkout.signedInAs} <span className="text-ink-900">{user.email}</span>
       </p>
 
       <div className="mt-12 grid gap-10 lg:grid-cols-[1.4fr_1fr]">
         <div className="rounded-2xl border border-ink-200 bg-white p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Order summary
+            {t.checkout.orderSummary}
           </div>
           <ul className="mt-5 divide-y divide-ink-200">
             {lines.map((l, i) => (
@@ -107,7 +108,7 @@ export default async function CheckoutPage() {
             ))}
           </ul>
           <div className="mt-4 flex items-baseline justify-between border-t border-ink-200 pt-4">
-            <span className="font-medium text-ink-900">Total</span>
+            <span className="font-medium text-ink-900">{t.checkout.total}</span>
             <span className="text-xl font-medium text-ink-900">
               {formatPrice(total, "USD")}
             </span>
@@ -116,16 +117,16 @@ export default async function CheckoutPage() {
 
         <aside className="h-fit rounded-2xl border border-ink-200 bg-white p-6">
           <div className="text-xs uppercase tracking-[0.2em] text-ink-500">
-            Payment
+            {t.checkout.payment}
           </div>
           <div className="mt-4 rounded-xl border border-dashed border-ink-200 bg-ink-50 p-4 text-sm text-ink-600">
-            <div className="font-medium text-ink-900">Mock provider</div>
+            <div className="font-medium text-ink-900">{t.checkout.mockProviderTitle}</div>
             <p className="mt-1">
-              Payment always succeeds in demo mode. Swap for Stripe or QPay in{" "}
+              {t.checkout.mockProviderBody}{" "}
               <code className="rounded bg-ink-100 px-1 py-0.5">
                 lib/payments/
-              </code>
-              .
+              </code>{" "}
+              {t.checkout.mockProviderBody2}
             </p>
           </div>
           <div className="mt-6">

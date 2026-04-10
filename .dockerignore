@@ -1,0 +1,49 @@
+# Keep the build context lean and prevent secrets from ever entering
+# the image.
+
+# deps and build artifacts
+node_modules
+.next
+out
+dist
+build
+.turbo
+
+# git
+.git
+.gitignore
+.gitattributes
+
+# env — NEVER bake into the image
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# runtime data (persistent via Railway volume, not baked)
+storage
+public/previews/imports
+test-fixtures
+
+# editor / OS
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# misc docs we don't need in the image
+docs
+CHANGELOG.md
+
+# Tests we won't run in prod image
+coverage
+.nyc_output
+
+# Docker meta
+Dockerfile*
+.dockerignore
+docker-compose*.yml

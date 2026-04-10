@@ -12,14 +12,34 @@ async function main() {
   console.log("→ seeding database");
 
   // ── Users ────────────────────────────────────────────────
-  const adminHash = await bcrypt.hash("admin123", 10);
-  const userHash = await bcrypt.hash("user123", 10);
+  // Credentials are env-driven so staging/production can set strong
+  // values at deploy time. Dev defaults to admin123/user123 for
+  // convenience.
+  const adminEmail = process.env.SEED_ADMIN_EMAIL ?? "admin@atelier.dev";
+  const customerEmail = process.env.SEED_USER_EMAIL ?? "user@atelier.dev";
+  const envAdminPassword = process.env.SEED_ADMIN_PASSWORD;
+  const envUserPassword = process.env.SEED_USER_PASSWORD;
+
+  if (process.env.NODE_ENV === "production") {
+    if (!envAdminPassword || !envUserPassword) {
+      console.error(
+        "SEED_ADMIN_PASSWORD and SEED_USER_PASSWORD must be set when seeding in production.",
+      );
+      process.exit(1);
+    }
+  }
+
+  const adminPassword = envAdminPassword ?? "admin123";
+  const customerPassword = envUserPassword ?? "user123";
+
+  const adminHash = await bcrypt.hash(adminPassword, 10);
+  const userHash = await bcrypt.hash(customerPassword, 10);
 
   const admin = await prisma.user.upsert({
-    where: { email: "admin@atelier.dev" },
-    update: {},
+    where: { email: adminEmail },
+    update: { passwordHash: adminHash },
     create: {
-      email: "admin@atelier.dev",
+      email: adminEmail,
       name: "Atelier Admin",
       passwordHash: adminHash,
       role: Role.ADMIN,
@@ -27,10 +47,10 @@ async function main() {
   });
 
   const customer = await prisma.user.upsert({
-    where: { email: "user@atelier.dev" },
-    update: {},
+    where: { email: customerEmail },
+    update: { passwordHash: userHash },
     create: {
-      email: "user@atelier.dev",
+      email: customerEmail,
       name: "Sample Customer",
       passwordHash: userHash,
       role: Role.USER,
@@ -461,8 +481,12 @@ async function main() {
   }
 
   console.log("✓ seeded");
-  console.log(`  admin:    ${admin.email}  /  admin123`);
-  console.log(`  customer: ${customer.email}  /  user123`);
+  console.log(
+    `  admin:    ${admin.email}  /  ${envAdminPassword ? "<from SEED_ADMIN_PASSWORD>" : adminPassword}`,
+  );
+  console.log(
+    `  customer: ${customer.email}  /  ${envUserPassword ? "<from SEED_USER_PASSWORD>" : customerPassword}`,
+  );
 }
 
 main()

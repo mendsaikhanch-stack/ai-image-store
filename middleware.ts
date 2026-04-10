@@ -8,15 +8,32 @@ import { jwtVerify } from "jose";
 // `lib/session.ts::requireAdminOrRedirect()` remains as a second
 // line of defense in server components for defense-in-depth.
 
-const SECRET = new TextEncoder().encode(
-  process.env.AUTH_SECRET ?? "dev-secret-change-me-dev-secret-change-me",
-);
 const SESSION_COOKIE = "ais_session";
+
+let cachedSecret: Uint8Array | null = null;
+
+function getSecret(): Uint8Array {
+  if (cachedSecret) return cachedSecret;
+  const raw = process.env.AUTH_SECRET;
+  if (!raw) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error(
+        "[middleware] AUTH_SECRET must be set in production",
+      );
+    }
+    cachedSecret = new TextEncoder().encode(
+      "dev-secret-change-me-dev-secret-change-me-dev-secret-change-me",
+    );
+    return cachedSecret;
+  }
+  cachedSecret = new TextEncoder().encode(raw);
+  return cachedSecret;
+}
 
 async function isAdmin(token: string | undefined): Promise<boolean> {
   if (!token) return false;
   try {
-    const { payload } = await jwtVerify(token, SECRET);
+    const { payload } = await jwtVerify(token, getSecret());
     return payload.role === "ADMIN";
   } catch {
     return false;

@@ -270,6 +270,114 @@ node scripts/make-user-test-zip.mjs     # builds test-assets.zip
 
 ---
 
+## Deploying a staging demo to Railway
+
+This section describes a **private staging deployment** — mock
+payments, no email, no cloud storage. It is NOT production-ready.
+
+### 1. Create the Railway project
+
+1. Sign in at [railway.com](https://railway.com) and create a new
+   project from the `mendsaikhanch-stack/ai-image-store` GitHub repo.
+   Railway auto-detects `Dockerfile` and uses it via `railway.json`.
+2. Add a **PostgreSQL** plugin to the project (Railway provides a
+   managed Postgres and sets `DATABASE_URL` on the service
+   automatically — just reference it).
+3. Add a **persistent volume** to the Next.js service mounted at
+   `/app/storage`. This is where paid source files live and MUST
+   survive deploys.
+
+### 2. Set environment variables
+
+In the Railway service → Variables, set:
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | `${{Postgres.DATABASE_URL}}` (reference the plugin) |
+| `AUTH_SECRET` | long random string — `openssl rand -base64 32` |
+| `NEXT_PUBLIC_APP_URL` | the Railway public URL for this service (e.g. `https://ai-image-store-production.up.railway.app`) |
+| `NEXT_PUBLIC_DEMO_MODE` | `true` |
+| `STORAGE_SOURCE_DIR` | `/app/storage/source` (inside the mounted volume) |
+| `STORAGE_PREVIEW_DIR` | `/app/public/previews` (ephemeral, regenerated on import) |
+| `PAYMENT_PROVIDER` | `mock` |
+| `VISION_PROVIDER` | `heuristic` |
+| `SEED_ADMIN_EMAIL` | an email you control |
+| `SEED_ADMIN_PASSWORD` | a strong password — **NOT** `admin123` |
+| `SEED_USER_EMAIL` | any test email |
+| `SEED_USER_PASSWORD` | a strong password — **NOT** `user123` |
+| `NODE_ENV` | `production` (Railway sets this by default) |
+
+The app refuses to start in production if `DATABASE_URL` or
+`AUTH_SECRET` is missing.
+
+### 3. Deploy
+
+Push to `master` — Railway builds the Dockerfile and deploys.
+
+First-deploy timeline:
+1. Image build (~3-5 min — `npm ci` + `prisma generate` + `next build`)
+2. Container starts, entrypoint runs `prisma migrate deploy`
+3. Next.js listens on `$PORT` (set by Railway)
+4. Railway hits `/api/health` — deploy goes green when it returns 200
+
+### 4. Seed the staging database
+
+From your local machine, run the seed against the Railway DB once:
+
+```powershell
+$env:DATABASE_URL="<railway postgres connection string>"
+$env:SEED_ADMIN_PASSWORD="<same strong password you set on Railway>"
+$env:SEED_USER_PASSWORD="<same strong password>"
+npm run db:seed
+```
+
+You can grab the external connection string from the Postgres plugin
+page in Railway. Remove it from your shell history afterwards:
+`Clear-History` or close the terminal.
+
+### 5. Verify the deploy
+
+- Open the Railway URL → you should see the DEMO banner at the top
+- `https://<url>/api/health` → JSON `{"status":"ok","env":"production","demo":true,...}`
+- Sign in at `/login` with your admin credentials
+- `/admin`, `/admin/products`, `/admin/import` all load
+- Upload a small zip at `/admin/import` → candidates appear in review
+  queue → approve one → edit → publish → verify on `/shop`
+
+### 6. Rotating admin credentials after deploy
+
+To change the admin password later:
+
+```powershell
+# Option A: use Prisma Studio against the Railway DB
+$env:DATABASE_URL="<railway postgres url>"
+npx prisma studio
+# edit the User row, set passwordHash via bcrypt (see /scripts)
+
+# Option B: re-run seed with a new SEED_ADMIN_PASSWORD — it upserts
+# the passwordHash on the existing row.
+$env:SEED_ADMIN_PASSWORD="new-strong-password"
+npm run db:seed
+```
+
+### Railway checklist
+
+- [ ] Postgres plugin added and reachable from the service
+- [ ] Volume mounted at `/app/storage`
+- [ ] All required env vars set (`AUTH_SECRET`, seed passwords, etc.)
+- [ ] `NEXT_PUBLIC_DEMO_MODE=true` so reviewers see the banner
+- [ ] Seeded admin password is **NOT** the default `admin123`
+- [ ] `/api/health` returns 200
+- [ ] A test upload → approve → publish → download round-trip works
+
+### What this staging deploy does NOT include
+
+See the "Remaining work before production" section below for the full
+list. Short version: mock payments, no email, no real watermarking,
+no S3, no rate limiting, local-disk storage only.
+
+---
+
 ## Where to plug in Phase 4+
 
 - **Stripe / QPay**: implement `PaymentProvider` in `lib/payments/`, register in `index.ts`
@@ -279,3 +387,34 @@ node scripts/make-user-test-zip.mjs     # builds test-assets.zip
 - **Background import jobs**: `processImport()` in `lib/import/pipeline.ts` is structured to drop into a worker queue (BullMQ / Inngest). The route handler becomes a thin enqueuer
 - **S3 / GCS storage**: replace disk ops in `lib/storage.ts` + the download route's `readFile()`
 - **SEO / blog pages**: add under `app/(marketing)/` with a Prisma-backed Post model
+
+---
+
+## Remaining work before a production launch
+
+This staging deploy is intentionally *not* production-safe. Before
+accepting real customers or real money, at minimum:
+
+- [ ] **Real payments** — implement `PaymentProvider` with Stripe or
+      QPay, handle webhooks, reconcile orders
+- [ ] **Rate limiting** on `/login`, `/register`, `/api/admin/import`,
+      `/api/downloads/[token]`
+- [ ] **Email** — order confirmations, password reset, download
+      ready notifications (Resend or Postmark)
+- [ ] **Invisible watermarking** — implement `WatermarkProvider` so
+      paid downloads are fingerprinted per buyer
+- [ ] **Cloud object storage** — migrate `STORAGE_SOURCE_DIR` and
+      `STORAGE_PREVIEW_DIR` to S3 / R2 / Vercel Blob with signed
+      URLs; update `lib/storage.ts`, the import pipeline, and the
+      download route handler
+- [ ] **Legal pages** — Privacy, Terms, Cookies (currently `#` stubs
+      in the footer)
+- [ ] **Error tracking** — Sentry or similar, wire into `lib/`
+- [ ] **Structured logging** in production (pino or similar)
+- [ ] **Background job queue** for large bulk imports (BullMQ /
+      Inngest) — the pipeline is already structured to drop into a
+      worker
+- [ ] **DB backups** — Railway offers snapshots; configure a schedule
+- [ ] **Rotate `AUTH_SECRET`** for each environment, never reuse
+- [ ] **CORS / CSRF** audit on mutating endpoints
+- [ ] **CI** — GitHub Actions workflow for typecheck + build on PR

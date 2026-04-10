@@ -1,0 +1,410 @@
+// Prisma schema for the AI Image Store MVP.
+// Keep it focused: enough entities to model a licensed digital marketplace
+// without overbuilding for hypothetical features.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum LicenseTier {
+  PERSONAL
+  STANDARD_COMMERCIAL
+  EXTENDED_COMMERCIAL
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum ImportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ImportMode {
+  FOLDER
+  SINGLE
+}
+
+// ─────────────────────────────────────────────────────────────
+// Users & Auth
+// ─────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  passwordHash String
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orders       Order[]
+  downloads    Download[]
+  auditLogs    AuditLog[]
+  abuseReports AbuseReport[]
+  importBatches ImportBatch[]
+}
+
+// ─────────────────────────────────────────────────────────────
+// Catalog
+// ─────────────────────────────────────────────────────────────
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  description String?
+  coverUrl    String?
+  products    Product[]
+  createdAt   DateTime  @default(now())
+}
+
+model Tag {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  name     String
+  products Product[] @relation("ProductTags")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  // Base price shown on listings, in minor units (e.g. cents/tögrög subunits)
+  priceCents  Int
+  currency    String   @default("USD")
+
+  // File metadata (summary shown on product page)
+  fileFormat     String @default("PNG + JPG")
+  fileResolution String @default("4096×4096 px")
+  fileCount      Int    @default(10)
+  fileSizeMb     Int    @default(120)
+
+  // Storage pointers. Previews are public; source is delivered via tokens only.
+  // TODO(security): add per-user watermarking/fingerprinting at download time.
+  sourcePath String // e.g. "storage/source/nebula-dreams.zip"
+
+  // Public visibility is (isActive AND status = ACTIVE). DRAFT imports
+  // never show up publicly regardless of isActive.
+  status       ProductStatus @default(ACTIVE)
+  isActive     Boolean @default(true)
+  isFeatured   Boolean @default(false)
+  isNew        Boolean @default(false)
+  isBestseller Boolean @default(false)
+  isBundle     Boolean @default(false)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  tags           Tag[]                 @relation("ProductTags")
+  images         ProductImage[]
+  licensePrices  ProductLicensePrice[]
+  orderItems     OrderItem[]
+  bundleItems    BundleItem[]
+  abuseReports   AbuseReport[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, isFeatured])
+  @@index([categoryId])
+  @@index([status])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  sortOrder Int     @default(0)
+  // SHA-256 hex of the original source bytes, used for dedup against
+  // future imports. Optional so existing rows remain valid.
+  hash      String?
+
+  @@index([productId])
+  @@index([hash])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Licenses
+// ─────────────────────────────────────────────────────────────
+
+model License {
+  id          String      @id @default(cuid())
+  tier        LicenseTier @unique
+  name        String
+  summary     String
+  allowed     String[]
+  notAllowed  String[]
+  // Multiplier applied to product base price when this license is chosen.
+  // e.g. PERSONAL 1.0, STANDARD 2.5, EXTENDED 5.0
+  priceMultiplier Float @default(1.0)
+
+  productPrices ProductLicensePrice[]
+  orderItems    OrderItem[]
+}
+
+// Allows per-product overrides of license pricing if needed.
+// If absent for a (product, license) pair, use product.priceCents * license.priceMultiplier.
+model ProductLicensePrice {
+  id         String  @id @default(cuid())
+  productId  String
+  licenseId  String
+  priceCents Int
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  license    License @relation(fields: [licenseId], references: [id])
+
+  @@unique([productId, licenseId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bundles
+// Bundles are just Products with isBundle=true, and a list of
+// child products via BundleItem.
+// ─────────────────────────────────────────────────────────────
+
+model Bundle {
+  id        String       @id @default(cuid())
+  slug      String       @unique
+  title     String
+  subtitle  String?
+  coverUrl  String?
+  priceCents Int
+  items     BundleItem[]
+  createdAt DateTime     @default(now())
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  productId String
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([bundleId, productId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Orders
+// ─────────────────────────────────────────────────────────────
+
+model Order {
+  id           String      @id @default(cuid())
+  userId       String
+  user         User        @relation(fields: [userId], references: [id])
+  status       OrderStatus @default(PENDING)
+  totalCents   Int
+  currency     String      @default("USD")
+  // Free text provider id from mock/Stripe/QPay
+  providerRef  String?
+  paidAt       DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  items     OrderItem[]
+  downloads Download[]
+  coupon    Coupon?     @relation(fields: [couponId], references: [id])
+  couponId  String?
+
+  @@index([userId])
+  @@index([status])
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+  licenseId  String
+  license    License @relation(fields: [licenseId], references: [id])
+  priceCents Int
+  quantity   Int     @default(1)
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Downloads
+// A Download row = entitlement earned by a paid order item.
+// DownloadToken = short-lived signed token used by the download route.
+// ─────────────────────────────────────────────────────────────
+
+model Download {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  licenseTier LicenseTier
+  maxCount    Int      @default(5)
+  usedCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  tokens DownloadToken[]
+
+  @@index([userId])
+  @@index([orderId])
+}
+
+model DownloadToken {
+  id         String   @id @default(cuid())
+  downloadId String
+  download   Download @relation(fields: [downloadId], references: [id], onDelete: Cascade)
+  token      String   @unique
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([downloadId])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Coupons, abuse reports, audit log (scaffolds)
+// ─────────────────────────────────────────────────────────────
+
+model Coupon {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  description    String?
+  percentOff     Int? // 0-100
+  amountOffCents Int?
+  maxRedemptions Int?
+  redeemedCount  Int       @default(0)
+  expiresAt      DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  orders         Order[]
+}
+
+model AbuseReport {
+  id        String   @id @default(cuid())
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id])
+  reporterId String?
+  reporter  User?    @relation(fields: [reporterId], references: [id])
+  reason    String
+  details   String?
+  resolved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String
+  target    String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+}
+
+// ─────────────────────────────────────────────────────────────
+// Bulk import
+// Admin uploads a folder or zip → pipeline creates ImportCandidate
+// rows (one per folder in FOLDER mode, one per file in SINGLE mode)
+// with child ImportAsset rows. Admin reviews the queue and approves
+// candidates, which creates real Products in DRAFT status.
+// ─────────────────────────────────────────────────────────────
+
+model ImportBatch {
+  id        String     @id @default(cuid())
+  createdBy String
+  creator   User       @relation(fields: [createdBy], references: [id])
+  mode      ImportMode
+  note      String?
+  createdAt DateTime   @default(now())
+
+  candidates ImportCandidate[]
+
+  @@index([createdBy])
+}
+
+model ImportCandidate {
+  id      String       @id @default(cuid())
+  batchId String
+  batch   ImportBatch  @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  status  ImportStatus @default(PENDING)
+
+  // Grouping key within a batch. For FOLDER mode this is the folder
+  // path; for SINGLE mode it is the original filename.
+  groupKey String
+
+  // Vision-provider suggestions. Admin can edit these before approval.
+  suggestedTitle       String
+  suggestedDescription String?
+  suggestedCategory    String? // category slug
+  suggestedTags        String[]
+  confidence           Float   @default(0)
+
+  // Dedup hints. Never blocking — admin decides.
+  isDuplicate          Boolean @default(false)
+  duplicateOfProductId String?
+
+  // Populated once the admin approves the candidate.
+  createdProductId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets ImportAsset[]
+
+  @@index([batchId])
+  @@index([status])
+}
+
+model ImportAsset {
+  id          String          @id @default(cuid())
+  candidateId String
+  candidate   ImportCandidate @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+
+  // Disk path of the stored original (under storage/source/imports/...).
+  // Never exposed directly; served later via a signed download route.
+  sourcePath String
+  // Public URL (under /previews/imports/...) for the generated preview.
+  previewPath String
+
+  originalName String
+  relativePath String
+  fileHash     String // sha256 hex
+  sizeBytes    Int
+  mimeType     String
+  width        Int?
+  height       Int?
+
+  sortOrder Int @default(0)
+
+  @@index([candidateId])
+  @@index([fileHash])
+}

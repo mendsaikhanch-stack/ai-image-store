@@ -29,9 +29,17 @@ export function importPreviewDir(batchId: string): string {
   return path.join(PREVIEW_ROOT, "imports", batchId);
 }
 
+export function productPreviewDir(productId: string): string {
+  return path.join(PREVIEW_ROOT, "products", productId);
+}
+
 // Public URL path (served under Next's /public). Always forward slashes.
 export function importPreviewUrl(batchId: string, filename: string): string {
   return `/previews/imports/${batchId}/${filename}`;
+}
+
+export function productPreviewUrl(productId: string, filename: string): string {
+  return `/previews/products/${productId}/${filename}`;
 }
 
 export async function ensureDir(dirPath: string): Promise<void> {

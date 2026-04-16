@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Input } from "@/components/ui/Input";
 import { ProductEditForm } from "@/components/admin/ProductEditForm";
+import { ProductImageUploadForm } from "@/components/admin/ProductImageUploadForm";
 import {
   publishProductAction,
   archiveProductAction,
@@ -240,10 +241,7 @@ export default async function ProductEditPage({
                 ))}
               </ul>
             )}
-            <p className="mt-4 text-xs text-ink-500">
-              TODO: upload new product images from this page (currently only
-              populated by bulk import).
-            </p>
+            <ProductImageUploadForm productId={product.id} />
           </div>
 
           <h2 className="mb-4 mt-10 text-xs uppercase tracking-[0.2em] text-ink-500">

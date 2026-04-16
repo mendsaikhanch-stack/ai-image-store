@@ -65,3 +65,8 @@ export async function getRequestClientIp(): Promise<string> {
 
   return "unknown";
 }
+
+// Test-only helper for isolated unit tests.
+export function resetRateLimitBucketsForTest(): void {
+  buckets.clear();
+}

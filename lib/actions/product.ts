@@ -2,15 +2,31 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import sharp from "sharp";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/session";
+import { sha256Hex } from "@/lib/hash";
+import {
+  productPreviewDir,
+  productPreviewUrl,
+  writeBytes,
+} from "@/lib/storage";
 import { slugify } from "@/lib/utils";
 
 export type ProductActionState = {
   error?: string;
   success?: string;
 };
+
+const PRODUCT_IMAGE_ACCEPTED_MIME = new Set([
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+]);
+const PRODUCT_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PRODUCT_IMAGE_MAX_FILES = 8;
 
 // ─────────────────────────────────────────────────────────────
 // Update product
@@ -247,6 +263,139 @@ export async function deleteProductImageAction(formData: FormData) {
 
   await prisma.productImage.delete({ where: { id: imageId } });
   revalidatePath(`/admin/products/${image.productId}/edit`);
+}
+
+export async function uploadProductImagesAction(
+  _prev: ProductActionState,
+  formData: FormData,
+): Promise<ProductActionState> {
+  await requireAdmin();
+
+  const productId = String(formData.get("productId") ?? "");
+  const altBaseRaw = String(formData.get("altBase") ?? "").trim();
+  const files = formData
+    .getAll("images")
+    .filter((entry): entry is File => entry instanceof File && entry.size > 0);
+
+  if (!productId) return { error: "Product id is required" };
+  if (files.length === 0) return { error: "Select at least one image to upload" };
+  if (files.length > PRODUCT_IMAGE_MAX_FILES) {
+    return {
+      error: `Upload up to ${PRODUCT_IMAGE_MAX_FILES} images at a time`,
+    };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { id: true, slug: true, isFeatured: true },
+  });
+  if (!product) return { error: "Product not found" };
+
+  let totalBytes = 0;
+  const existingImages = await prisma.productImage.findMany({
+    where: { productId },
+    select: { hash: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  const existingHashes = new Set(
+    existingImages.map((image) => image.hash).filter(Boolean),
+  );
+  const previewDir = productPreviewDir(productId);
+
+  const prepared: {
+    url: string;
+    alt: string | null;
+    sortOrder: number;
+    hash: string;
+    bytes: Buffer;
+    filename: string;
+  }[] = [];
+
+  for (let index = 0; index < files.length; index++) {
+    const file = files[index]!;
+    if (!PRODUCT_IMAGE_ACCEPTED_MIME.has(file.type)) {
+      return {
+        error: `${file.name} is not a supported image type. Use JPG, PNG, or WebP.`,
+      };
+    }
+    if (file.size > PRODUCT_IMAGE_MAX_BYTES) {
+      return {
+        error: `${file.name} exceeds the ${Math.floor(PRODUCT_IMAGE_MAX_BYTES / (1024 * 1024))} MB limit.`,
+      };
+    }
+
+    totalBytes += file.size;
+    if (totalBytes > PRODUCT_IMAGE_MAX_BYTES * PRODUCT_IMAGE_MAX_FILES) {
+      return { error: "Upload payload is too large" };
+    }
+
+    const sourceBytes = Buffer.from(await file.arrayBuffer());
+    const hash = sha256Hex(sourceBytes);
+    if (existingHashes.has(hash)) continue;
+
+    let previewBytes: Buffer;
+    try {
+      previewBytes = await sharp(sourceBytes, { failOn: "error" })
+        .resize({ width: 1600, withoutEnlargement: true })
+        .webp({ quality: 82 })
+        .toBuffer();
+    } catch {
+      return {
+        error: `${file.name} could not be processed as a valid image.`,
+      };
+    }
+
+    const filename = `${hash.slice(0, 20)}-${Date.now()}-${index}.webp`;
+    const alt =
+      altBaseRaw.length > 0
+        ? files.length > 1
+          ? `${altBaseRaw} ${index + 1}`
+          : altBaseRaw
+        : null;
+
+    prepared.push({
+      url: productPreviewUrl(productId, filename),
+      alt,
+      sortOrder: existingImages.length + prepared.length,
+      hash,
+      bytes: previewBytes,
+      filename,
+    });
+    existingHashes.add(hash);
+  }
+
+  if (prepared.length === 0) {
+    return { success: "No new images were added" };
+  }
+
+  await Promise.all(
+    prepared.map((image) =>
+      writeBytes(`${previewDir}/${image.filename}`, image.bytes),
+    ),
+  );
+
+  await prisma.productImage.createMany({
+    data: prepared.map((image) => ({
+      productId,
+      url: image.url,
+      alt: image.alt,
+      sortOrder: image.sortOrder,
+      hash: image.hash,
+    })),
+  });
+
+  revalidatePath(`/admin/products/${productId}/edit`);
+  revalidatePath("/admin/products");
+  revalidatePath(`/shop/${product.slug}`);
+  revalidatePath("/shop");
+  if (product.isFeatured) revalidatePath("/");
+
+  return {
+    success:
+      prepared.length === 1
+        ? "Uploaded 1 image"
+        : `Uploaded ${prepared.length} images`,
+  };
 }
 
 // ─────────────────────────────────────────────────────────────

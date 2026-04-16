@@ -2,6 +2,7 @@
 
 import { nanoid } from "nanoid";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getRequestClientIp } from "@/lib/rateLimit";
 import { getCurrentUser } from "@/lib/session";
 import { t } from "@/lib/i18n";
 
@@ -22,6 +23,18 @@ export async function createDownloadTokenAction(
   _prev: DownloadActionState,
   formData: FormData,
 ): Promise<DownloadActionState> {
+  const clientIp = await getRequestClientIp();
+  const rate = checkRateLimit({
+    key: `downloads:token:${clientIp}`,
+    windowMs: 5 * 60 * 1000,
+    limit: 20,
+  });
+  if (!rate.ok) {
+    return {
+      error: `Хэт олон хүсэлт илгээгдлээ. ${rate.retryAfterSeconds} сек дараа дахин оролдоно уу.`,
+    };
+  }
+
   const user = await getCurrentUser();
   if (!user) return { error: t.downloads.errorNotSignedIn };
 

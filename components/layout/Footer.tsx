@@ -33,8 +33,8 @@ export function Footer() {
             title={t.footer.legal}
             links={[
               { href: "/license", label: t.footer.licenseTerms },
-              { href: "#", label: t.footer.privacy },
-              { href: "#", label: t.footer.terms },
+              { href: "/privacy", label: t.footer.privacy },
+              { href: "/terms", label: t.footer.terms },
             ]}
           />
         </div>

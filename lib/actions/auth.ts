@@ -7,6 +7,7 @@ import {
   destroySessionCookie,
 } from "@/lib/session";
 import { hashPassword, verifyPassword } from "@/lib/auth";
+import { checkRateLimit, getRequestClientIp } from "@/lib/rateLimit";
 import { loginSchema, registerSchema } from "@/lib/validation";
 import { t } from "@/lib/i18n";
 
@@ -19,6 +20,18 @@ export async function loginAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const clientIp = await getRequestClientIp();
+  const loginLimit = checkRateLimit({
+    key: `auth:login:${clientIp}`,
+    windowMs: 10 * 60 * 1000,
+    limit: 10,
+  });
+  if (!loginLimit.ok) {
+    return {
+      error: `Хэт олон оролдлого хийгдлээ. ${loginLimit.retryAfterSeconds} сек дараа дахин оролдоно уу.`,
+    };
+  }
+
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
@@ -49,6 +62,18 @@ export async function registerAction(
   _prev: AuthFormState,
   formData: FormData,
 ): Promise<AuthFormState> {
+  const clientIp = await getRequestClientIp();
+  const registerLimit = checkRateLimit({
+    key: `auth:register:${clientIp}`,
+    windowMs: 10 * 60 * 1000,
+    limit: 8,
+  });
+  if (!registerLimit.ok) {
+    return {
+      error: `Хэт олон бүртгэлийн оролдлого хийгдлээ. ${registerLimit.retryAfterSeconds} сек дараа дахин оролдоно уу.`,
+    };
+  }
+
   const parsed = registerSchema.safeParse({
     name: formData.get("name"),
     email: formData.get("email"),

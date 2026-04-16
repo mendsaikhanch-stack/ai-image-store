@@ -6,23 +6,63 @@ export type ExtractedEntry = {
   data: Buffer;
 };
 
+type ExtractZipOptions = {
+  maxEntries: number;
+  maxEntryBytes: number;
+  maxTotalBytes: number;
+};
+
 // Extracts image entries from a zip Buffer. Ignores directories,
 // macOS metadata, and non-image extensions.
-export function extractZip(zipBytes: Buffer): ExtractedEntry[] {
+export function extractZip(
+  zipBytes: Buffer,
+  options: ExtractZipOptions,
+): ExtractedEntry[] {
   const zip = new AdmZip(zipBytes);
   const entries = zip.getEntries();
+  if (entries.length > options.maxEntries) {
+    throw new Error(`Zip contains too many files (max ${options.maxEntries}).`);
+  }
 
   const out: ExtractedEntry[] = [];
+  let totalBytes = 0;
   for (const entry of entries) {
     if (entry.isDirectory) continue;
     const name = entry.entryName;
     if (name.startsWith("__MACOSX/") || name.endsWith(".DS_Store")) continue;
     if (!isImagePath(name)) continue;
 
+    const declaredSize = entry.header.size;
+    if (declaredSize > options.maxEntryBytes) {
+      throw new Error(
+        `Zip entry "${name}" exceeds the per-file limit of ${Math.floor(
+          options.maxEntryBytes / (1024 * 1024),
+        )} MB.`,
+      );
+    }
+
+    const data = entry.getData();
+    if (data.byteLength > options.maxEntryBytes) {
+      throw new Error(
+        `Zip entry "${name}" exceeds the per-file limit of ${Math.floor(
+          options.maxEntryBytes / (1024 * 1024),
+        )} MB after extraction.`,
+      );
+    }
+
+    totalBytes += data.byteLength;
+    if (totalBytes > options.maxTotalBytes) {
+      throw new Error(
+        `Zip expands beyond the total extraction limit of ${Math.floor(
+          options.maxTotalBytes / (1024 * 1024),
+        )} MB.`,
+      );
+    }
+
     out.push({
       relativePath: name,
       filename: lastSegment(name),
-      data: entry.getData(),
+      data,
     });
   }
   return out;

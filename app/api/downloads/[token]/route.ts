@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit, getRequestClientIp } from "@/lib/rateLimit";
 import { getCurrentUser } from "@/lib/session";
 import { noopWatermark } from "@/lib/watermark/types";
 
@@ -29,6 +30,22 @@ export async function GET(
   _request: Request,
   { params }: { params: Params },
 ) {
+  const clientIp = await getRequestClientIp();
+  const rate = checkRateLimit({
+    key: `downloads:file:${clientIp}`,
+    windowMs: 5 * 60 * 1000,
+    limit: 30,
+  });
+  if (!rate.ok) {
+    return NextResponse.json(
+      { error: `Too many download requests. Retry in ${rate.retryAfterSeconds} seconds.` },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
+
   const { token } = await params;
 
   const user = await getCurrentUser();
@@ -118,29 +135,60 @@ export async function GET(
     mimeType,
   });
 
-  // Atomically record the download. Do this AFTER the bytes are
-  // prepared so a failed read doesn't burn through the user's quota.
-  await prisma.$transaction([
-    prisma.downloadToken.update({
-      where: { id: record.id },
-      data: { usedAt: new Date() },
-    }),
-    prisma.download.update({
-      where: { id: record.downloadId },
-      data: { usedCount: { increment: 1 } },
-    }),
-    prisma.auditLog.create({
-      data: {
-        userId: user.id,
-        action: "download",
-        target: record.download.productId,
-        metadata: {
-          orderId: record.download.orderId,
-          tokenId: record.id,
+  // Atomically record token use and quota consumption so parallel
+  // requests cannot replay one token or exceed the remaining limit.
+  try {
+    await prisma.$transaction(async (tx) => {
+      const consumeToken = await tx.downloadToken.updateMany({
+        where: {
+          id: record.id,
+          usedAt: null,
+          expiresAt: { gt: new Date() },
         },
-      },
-    }),
-  ]);
+        data: { usedAt: new Date() },
+      });
+      if (consumeToken.count !== 1) {
+        throw new Error("TOKEN_ALREADY_USED");
+      }
+
+      const consumeQuota = await tx.download.updateMany({
+        where: {
+          id: record.downloadId,
+          usedCount: { lt: record.download.maxCount },
+        },
+        data: { usedCount: { increment: 1 } },
+      });
+      if (consumeQuota.count !== 1) {
+        throw new Error("DOWNLOAD_LIMIT_REACHED");
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: user.id,
+          action: "download",
+          target: record.download.productId,
+          metadata: {
+            orderId: record.download.orderId,
+            tokenId: record.id,
+          },
+        },
+      });
+    });
+  } catch (error) {
+    if (error instanceof Error && error.message === "TOKEN_ALREADY_USED") {
+      return NextResponse.json(
+        { error: "Token already used" },
+        { status: 410 },
+      );
+    }
+    if (error instanceof Error && error.message === "DOWNLOAD_LIMIT_REACHED") {
+      return NextResponse.json(
+        { error: "Download limit reached" },
+        { status: 429 },
+      );
+    }
+    throw error;
+  }
 
   const filename =
     `${product.slug}${ext || ""}` || `download-${record.downloadId}${ext}`;

@@ -3,6 +3,7 @@ import { ImportMode } from "@prisma/client";
 import { getCurrentUser } from "@/lib/session";
 import { extractZip } from "@/lib/import/zip";
 import { processImport, type IncomingFile } from "@/lib/import/pipeline";
+import { checkRateLimit, getRequestClientIp } from "@/lib/rateLimit";
 
 // Route handler, not a server action: server actions have a 1MB default
 // body limit. Route handlers stream multipart form data without that cap.
@@ -11,6 +12,9 @@ export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 const MAX_TOTAL_BYTES = 500 * 1024 * 1024; // 500 MB hard ceiling per upload
+const MAX_ZIP_ENTRIES = 2000;
+const MAX_ZIP_ENTRY_BYTES = 25 * 1024 * 1024;
+const MAX_UNZIPPED_BYTES = 750 * 1024 * 1024;
 // Phase 2.5 spec scopes accepted types to JPEG, PNG, WebP.
 const ACCEPTED_MIME = new Set([
   "image/jpeg",
@@ -20,6 +24,24 @@ const ACCEPTED_MIME = new Set([
 ]);
 
 export async function POST(request: Request) {
+  const clientIp = await getRequestClientIp();
+  const rate = checkRateLimit({
+    key: `import:${clientIp}`,
+    windowMs: 15 * 60 * 1000,
+    limit: 12,
+  });
+  if (!rate.ok) {
+    return NextResponse.json(
+      {
+        error: `Too many import requests. Retry in ${rate.retryAfterSeconds} seconds.`,
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rate.retryAfterSeconds) },
+      },
+    );
+  }
+
   const user = await getCurrentUser();
   if (!user || user.role !== "ADMIN") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -62,7 +84,18 @@ export async function POST(request: Request) {
     }
 
     const zipBytes = Buffer.from(await zipFile.arrayBuffer());
-    const entries = extractZip(zipBytes);
+    let entries;
+    try {
+      entries = extractZip(zipBytes, {
+        maxEntries: MAX_ZIP_ENTRIES,
+        maxEntryBytes: MAX_ZIP_ENTRY_BYTES,
+        maxTotalBytes: MAX_UNZIPPED_BYTES,
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Zip extraction failed";
+      return NextResponse.json({ error: message }, { status: 400 });
+    }
     if (entries.length === 0) {
       return NextResponse.json(
         { error: "Zip contained no image files" },
